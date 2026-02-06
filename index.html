@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>给小娜老师的雪 ❄️</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;700&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Noto Serif SC', serif;
+            background: linear-gradient(180deg, 
+                #1a1f3a 0%, 
+                #2d3561 30%, 
+                #4a5578 60%, 
+                #6b7394 100%);
+            position: relative;
+            touch-action: none;
+        }
+
+        /* 星空背景 */
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle var(--duration) ease-in-out infinite;
+            opacity: 0;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0; }
+            50% { opacity: var(--opacity); }
+        }
+
+        /* 主画布 */
+        #snowCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 内容容器 */
+        .content {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            pointer-events: none;
+        }
+
+        .title {
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: clamp(2.5rem, 12vw, 4rem);
+            color: #ffffff;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5),
+                         0 0 40px rgba(135, 206, 235, 0.3);
+            margin-bottom: 1.5rem;
+            animation: fadeInDown 1.5s ease-out;
+            letter-spacing: 0.3rem;
+        }
+
+        .message {
+            font-size: clamp(1rem, 4vw, 1.3rem);
+            color: #e8f4f8;
+            text-align: center;
+            line-height: 2;
+            max-width: 90%;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            animation: fadeInUp 1.5s ease-out 0.5s both;
+            font-weight: 300;
+        }
+
+        .instruction {
+            position: absolute;
+            bottom: 3rem;
+            font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+            color: rgba(255, 255, 255, 0.7);
+            animation: pulse 2s ease-in-out infinite;
+            text-align: center;
+            padding: 0 1rem;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.6;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+        }
+
+        /* 音乐控制按钮 */
+        .music-control {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            pointer-events: all;
+            backdrop-filter: blur(10px);
+        }
+
+        .music-control:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .music-control svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 480px) {
+            .title {
+                margin-bottom: 1rem;
+            }
+            
+            .message {
+                line-height: 1.8;
+            }
+            
+            .instruction {
+                bottom: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 星空背景 -->
+    <div class="stars" id="stars"></div>
+    
+    <!-- 雪花画布 -->
+    <canvas id="snowCanvas"></canvas>
+    
+    <!-- 内容 -->
+    <div class="content">
+        <h1 class="title">给小娜老师的雪</h1>
+        <p class="message">
+            虽然呼和浩特雪很少<br>
+            但这里可以下一场只属于你的雪<br>
+            触摸屏幕,让雪花为你飘落 ❄️
+        </p>
+        <div class="instruction">✨ 点击屏幕任意位置 ✨</div>
+    </div>
+
+    <!-- 音乐控制 -->
+    <div class="music-control" id="musicControl">
+        <svg id="musicIcon" viewBox="0 0 24 24">
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+        </svg>
+    </div>
+
+    <!-- 背景音乐 -->
+    <audio id="bgMusic" loop>
+        <source src="1.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // Canvas设置
+        const canvas = document.getElementById('snowCanvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        // 雪花数组
+        let snowflakes = [];
+        const maxSnowflakes = 150;
+
+        // 雪花类
+        class Snowflake {
+            constructor(x, y, isFromTouch = false) {
+                this.x = x || Math.random() * width;
+                this.y = y || -10;
+                this.radius = Math.random() * 3 + 1;
+                this.speed = Math.random() * 1 + 0.5;
+                this.wind = Math.random() * 0.5 - 0.25;
+                this.opacity = Math.random() * 0.5 + 0.5;
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = Math.random() * 2 - 1;
+                this.isFromTouch = isFromTouch;
+                
+                if (isFromTouch) {
+                    this.radius *= 1.5;
+                    this.opacity = 1;
+                }
+            }
+
+            update() {
+                this.y += this.speed;
+                this.x += this.wind;
+                this.rotation += this.rotationSpeed;
+
+                // 边界检查
+                if (this.x > width + 10) this.x = -10;
+                if (this.x < -10) this.x = width + 10;
+                
+                // 如果超出底部,重新开始
+                if (this.y > height + 10) {
+                    this.y = -10;
+                    this.x = Math.random() * width;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation * Math.PI / 180);
+                
+                ctx.beginPath();
+                
+                // 绘制六角雪花
+                for (let i = 0; i < 6; i++) {
+                    ctx.save();
+                    ctx.rotate(i * 60 * Math.PI / 180);
+                    
+                    // 主分支
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(0, -this.radius * 2);
+                    
+                    // 侧枝
+                    ctx.moveTo(0, -this.radius);
+                    ctx.lineTo(-this.radius * 0.5, -this.radius * 1.5);
+                    ctx.moveTo(0, -this.radius);
+                    ctx.lineTo(this.radius * 0.5, -this.radius * 1.5);
+                    
+                    ctx.restore();
+                }
+                
+                ctx.strokeStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+                
+                // 中心点
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius * 0.3, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.fill();
+                
+                ctx.restore();
+            }
+        }
+
+        // 初始化雪花
+        function initSnowflakes() {
+            for (let i = 0; i < 50; i++) {
+                snowflakes.push(new Snowflake());
+            }
+        }
+
+        // 动画循环
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            snowflakes.forEach(snowflake => {
+                snowflake.update();
+                snowflake.draw();
+            });
+            
+            requestAnimationFrame(animate);
+        }
+
+        // 触摸/点击事件
+        function addSnowBurst(x, y) {
+            const burstCount = 15;
+            for (let i = 0; i < burstCount; i++) {
+                const angle = (Math.PI * 2 * i) / burstCount;
+                const distance = Math.random() * 50 + 20;
+                const snowX = x + Math.cos(angle) * distance;
+                const snowY = y + Math.sin(angle) * distance;
+                
+                if (snowflakes.length < maxSnowflakes) {
+                    snowflakes.push(new Snowflake(snowX, snowY, true));
+                }
+            }
+        }
+
+        // 事件监听
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            Array.from(e.touches).forEach(touch => {
+                addSnowBurst(touch.clientX, touch.clientY);
+            });
+        });
+
+        canvas.addEventListener('click', (e) => {
+            addSnowBurst(e.clientX, e.clientY);
+        });
+
+        // 窗口大小调整
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        // 生成星空
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const starCount = 100;
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 60 + '%';
+                star.style.width = star.style.height = (Math.random() * 2 + 1) + 'px';
+                star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
+                star.style.setProperty('--opacity', Math.random() * 0.7 + 0.3);
+                star.style.animationDelay = Math.random() * 3 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // 音乐控制
+        const musicControl = document.getElementById('musicControl');
+        const musicIcon = document.getElementById('musicIcon');
+        const bgMusic = document.getElementById('bgMusic');
+        let isMusicPlaying = false;
+        
+        // 设置音量
+        bgMusic.volume = 0.3;
+        
+        musicControl.addEventListener('click', () => {
+            if (isMusicPlaying) {
+                bgMusic.pause();
+                isMusicPlaying = false;
+                musicIcon.innerHTML = '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>';
+            } else {
+                bgMusic.play().catch(err => {
+                    console.log('播放失败:', err);
+                    alert('请点击按钮开启音乐');
+                });
+                isMusicPlaying = true;
+                musicIcon.innerHTML = '<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>';
+            }
+        });
+
+        // 启动
+        createStars();
+        initSnowflakes();
+        animate();
+
+        // 防止页面滚动
+        document.body.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+    </script>
+</body>
+</html>
